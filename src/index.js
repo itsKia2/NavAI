@@ -5,20 +5,20 @@ import path from "path";
 import dotenv from "dotenv";
 dotenv.config(); // Load environment variables from .env file
 
-// Execution
+// TODO integrate langchain into this instead of what im doing right now
+// TODO create chunks and run them through the embedder
+// TODO find out if we need average embedding vector or should we just have a BUNCH of vectors
+
+// Important declarations
 const { supa, openai } = loading();
-const tableName = "pdfEmbeddings";
-// const filepath = "/home/kia/Uni/NavAI/istwo.pdf";
-// await genSaveEmbeds(supa, openai, "/home/kia/Uni/NavAI/op4_rto_final.pdf");
-// await genSaveEmbeds(supa, openai, "/home/kia/Uni/NavAI/crop_25011.pdf");
-// await genSaveEmbeds(
-// 	supa,
-// 	openai,
-// 	"/home/kia/Uni/NavAI/sop_outsch_0030_0020.pdf",
-// );
+const tableName = "pdfEmbedding";
+let doc = "";
+const MAX_TOKENS = 8192;
+
+// Execution
 const query =
-	"What are the Public Notifications associated with forecast or actual implementation of OP-4?";
-console.log("Query: " + query);
+	"What is the decision making process to declare an M/LCC 2 Abnormal Conditions Alert?";
+// genSaveEmbeds(supa, openai, "/home/kia/Uni/NavAI/crop_25011.pdf");
 runQuery(query, openai, supa);
 
 function loading() {
@@ -51,7 +51,7 @@ async function selectData(supabase, table) {
 
 async function insertData(supabase, content, embedding) {
 	const { error } = await supabase
-		.from("pdfEmbeddings")
+		.from("pdfEmbedding")
 		.insert({ content: content, embedding: embedding });
 
 	if (error) {
@@ -62,50 +62,89 @@ async function insertData(supabase, content, embedding) {
 }
 
 async function getPdfData(pdfFilePath) {
-	const textContent = [];
-
-	new PdfReader().parseFileItems(pdfFilePath, (err, item) => {
-		if (err) {
-			console.error("Error reading PDF:", err);
-		} else if (!item) {
-			// End of file reached
-			// console.log(textContent.join(" "));
-		} else if (item.text) {
-			// Accumulate the text content
-			textContent.push(item.text);
-		}
+	return new Promise((resolve, reject) => {
+		let textContent = [];
+		new PdfReader().parseFileItems(pdfFilePath, (err, item) => {
+			if (err) {
+				console.error("Error reading PDF:", err);
+				reject(err);
+			} else if (!item) {
+				// End of file reached
+				// console.log(textContent.join(" "));
+				// return textContent.join(" ");
+				resolve(textContent.join(" "));
+			} else if (item.text) {
+				// Accumulate the text content
+				textContent.push(item.text);
+				// console.log("added");
+			}
+		});
 	});
+
 	// console.log("Result: \n" + textContent);
-	return textContent.join(" ");
+}
+
+function storeDoc(input) {
+	doc = "";
+	doc = input;
+}
+
+function chunkText(text) {
+	const words = text.split(" ");
+	const chunks = [];
+	let currentChunk = [];
+
+	for (const word of words) {
+		currentChunk.push(word);
+		// Check token count approximation (1 word ≈ 1 token)
+		if (currentChunk.join(" ").length > MAX_TOKENS) {
+			chunks.push(currentChunk.join(" "));
+			currentChunk = []; // Start a new chunk
+		}
+	}
+	// Push remaining words as the last chunk
+	if (currentChunk.length > 0) {
+		chunks.push(currentChunk.join(" "));
+	}
+
+	console.log("Size of chunks: " + chunks.length);
+	return chunks;
 }
 
 // Okay this one is kinda confusing but
 // This creates AND inserts into the Supabase database
 async function genSaveEmbeds(supabase, openai, filepath) {
 	// const document = await getDocuments();
-	const document = await getPdfData(filepath);
+	await getPdfData(filepath).then((x) => storeDoc(x));
+	const lotsEmbeds = [];
 
 	// Assuming each document is a string
 	// changed from for loop to just happening once
 	// for document in documents {}
 	// OpenAI recommends replacing newlines with spaces for best results
-	const myInput = document.replace(/\n/g, " ");
+	const myInput = doc.replace(/\n/g, " ");
+	const chunks = chunkText(myInput);
+	let temp = "";
 
-	const embeddingResponse = await openai.embeddings.create({
-		model: "text-embedding-ada-002",
-		input: myInput,
-	});
-
-	// console.log("Embedding response:", embeddingResponse);
-	if (embeddingResponse && embeddingResponse.data) {
-		const [{ embedding }] = embeddingResponse.data;
-
-		insertData(supabase, path.basename(filepath), embedding);
-		console.log("Data inserted");
-		// return embedding;
-	} else {
-		throw Error("Something wrong with embedding");
+	for (let chunk of chunks) {
+		// create embedding FOR EACH CHUNK
+		const embeddingResponse = await openai.embeddings.create({
+			model: "text-embedding-ada-002",
+			input: chunk,
+		});
+		// pushing EACH chunk into the array which will be put into db LATER
+		if (embeddingResponse && embeddingResponse.data) {
+			temp = embeddingResponse.data[0].embedding;
+			const [{ embedding }] = embeddingResponse.data;
+			// replaced insertData with lotsEmbeds.push
+			lotsEmbeds.push(embedding);
+		} else {
+			throw Error("Something wrong with embedding response");
+		}
 	}
+
+	// now we insert all these chunks one by one into the db
+	lotsEmbeds.map((x) => insertData(supabase, path.basename(filepath), x));
 }
 
 async function runQuery(query, openai, supabase) {
@@ -124,6 +163,7 @@ async function runQuery(query, openai, supabase) {
 			console.error("Error fetching closest vector:", error);
 			return null;
 		}
+		console.log("Relevant vector: " + data[0].embedding);
 		console.log("Relevant file: " + data[0].content);
 		console.log("Distance between vectors: " + data[0].distance);
 	}
