@@ -6,7 +6,6 @@ import dotenv from "dotenv";
 dotenv.config(); // Load environment variables from .env file
 
 // TODO integrate langchain into this instead of what im doing right now
-// TODO create chunks and run them through the embedder
 // TODO find out if we need average embedding vector or should we just have a BUNCH of vectors
 
 // Important declarations
@@ -18,8 +17,9 @@ const MAX_TOKENS = 8192;
 // Execution
 const query =
 	"What is the decision making process to declare an M/LCC 2 Abnormal Conditions Alert?";
-// genSaveEmbeds(supa, openai, "/home/kia/Uni/NavAI/crop_25011.pdf");
-runQuery(query, openai, supa);
+
+// await genSaveEmbeds(supa, openai, "/home/kia/Uni/NavAI/crop_25011.pdf");
+// runQuery(query, openai, supa);
 
 function loading() {
 	// Load environment variables (if using dotenv)
@@ -49,10 +49,10 @@ async function selectData(supabase, table) {
 	}
 }
 
-async function insertData(supabase, content, embedding) {
+async function insertData(supabase, title, content, embedding) {
 	const { error } = await supabase
 		.from("pdfEmbedding")
-		.insert({ content: content, embedding: embedding });
+		.insert({ title: title, content: content, embedding: embedding });
 
 	if (error) {
 		console.error("Error inserting data:", error);
@@ -117,6 +117,7 @@ async function genSaveEmbeds(supabase, openai, filepath) {
 	// const document = await getDocuments();
 	await getPdfData(filepath).then((x) => storeDoc(x));
 	const lotsEmbeds = [];
+	const lotsText = [];
 
 	// Assuming each document is a string
 	// changed from for loop to just happening once
@@ -124,7 +125,6 @@ async function genSaveEmbeds(supabase, openai, filepath) {
 	// OpenAI recommends replacing newlines with spaces for best results
 	const myInput = doc.replace(/\n/g, " ");
 	const chunks = chunkText(myInput);
-	let temp = "";
 
 	for (let chunk of chunks) {
 		// create embedding FOR EACH CHUNK
@@ -134,17 +134,21 @@ async function genSaveEmbeds(supabase, openai, filepath) {
 		});
 		// pushing EACH chunk into the array which will be put into db LATER
 		if (embeddingResponse && embeddingResponse.data) {
-			temp = embeddingResponse.data[0].embedding;
 			const [{ embedding }] = embeddingResponse.data;
 			// replaced insertData with lotsEmbeds.push
 			lotsEmbeds.push(embedding);
+			lotsText.push(chunk);
 		} else {
 			throw Error("Something wrong with embedding response");
 		}
 	}
 
 	// now we insert all these chunks one by one into the db
-	lotsEmbeds.map((x) => insertData(supabase, path.basename(filepath), x));
+	// lotsEmbeds.map((x) => insertData(supabase, path.basename(filepath), x));
+	for (let i = 0; i < lotsEmbeds.length; i++) {
+		insertData(supabase, path.basename(filepath), lotsText[i], lotsEmbeds[i]);
+		console.log("Chunk added");
+	}
 }
 
 async function runQuery(query, openai, supabase) {
@@ -163,8 +167,27 @@ async function runQuery(query, openai, supabase) {
 			console.error("Error fetching closest vector:", error);
 			return null;
 		}
-		console.log("Relevant vector: " + data[0].embedding);
-		console.log("Relevant file: " + data[0].content);
-		console.log("Distance between vectors: " + data[0].distance);
+
+		// now start checking
+		// we get closest vector and extract the data
+		// pass the query AND closest vector DATA to chatgpt which will give us response
+		// let vectorTitle = data[0].title;
+		let vectorData = data[0].content;
+		const prompt = `The prompt is: ${query}. Here is the relevant information, please answer: ${vectorData}`;
+		const gptResp = await openai.chat.completions.create({
+			model: "gpt-3.5-turbo",
+			messages: [
+				// { role: "system", content: "You are a helpful assistant." }, // This is optional but provides context
+				{ role: "user", content: prompt }, // The user's query or prompt
+			],
+			// prompt: prompt,
+			max_tokens: 1500,
+		});
+		const response = gptResp.choices[0].message.content.trim();
+		console.log(response);
+
+		// console.log("Relevant vector: " + data[0].embedding);
+		// console.log("Relevant file: " + data[0].content);
+		// console.log("Distance between vectors: " + data[0].distance);
 	}
 }
