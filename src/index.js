@@ -16,11 +16,10 @@ const tableName = "pdfEmbeddings";
 // 	openai,
 // 	"/home/kia/Uni/NavAI/sop_outsch_0030_0020.pdf",
 // );
-runQuery(
-	"What is the decision making process to declare an M/LCC 2 Abnormal Conditions Alert?",
-	openai,
-	supa,
-);
+const query =
+	"What are the Public Notifications associated with forecast or actual implementation of OP-4?";
+console.log("Query: " + query);
+runQuery(query, openai, supa);
 
 function loading() {
 	// Load environment variables (if using dotenv)
@@ -125,6 +124,7 @@ async function runQuery(query, openai, supabase) {
 			console.error("Error fetching closest vector:", error);
 			return null;
 		}
-		console.log(data[0]);
+		console.log("Relevant file: " + data[0].content);
+		console.log("Distance between vectors: " + data[0].distance);
 	}
 }
