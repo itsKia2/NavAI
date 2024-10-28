@@ -1,7 +1,27 @@
-import { genSaveEmbeds, loadingEnv, runQuery } from "./backend/supa.js";
+import { genSaveEmbeds } from "./backend/supa.js";
+import { runQuery } from "./langchain.js";
 import path from "path";
+import { createClient } from "@supabase/supabase-js";
+import OpenAI from "openai";
 
 /* INITIALIZATION */
+
+function loadingEnv() {
+	// Load environment variables (if using dotenv)
+	const SUPABASE_URL = process.env.SUPABASE_URL;
+	const SUPABASE_API_KEY = process.env.SUPABASE_KEY;
+	const openaikey = process.env.OPENAI_API_KEY;
+
+	const config = new OpenAI({ apiKey: openaikey });
+	const openai = new OpenAI(config);
+	const client = createClient(SUPABASE_URL, SUPABASE_API_KEY);
+
+	// Create the Supabase client and OpenAI key
+	return {
+		supa: client,
+		openai: openai,
+	};
+}
 
 // Used to load Supabase client and OpenAI API
 const { supa, openai } = loadingEnv();
