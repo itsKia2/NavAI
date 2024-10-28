@@ -49,7 +49,7 @@ async function insertData(supabase, title, content, embedding) {
 	if (error) {
 		console.error("Error inserting data:", error);
 	} else {
-		console.log("Data inserted successfully");
+		console.log("insertData worked successfully");
 	}
 }
 
@@ -62,18 +62,14 @@ async function getPdfData(pdfFilePath) {
 				reject(err);
 			} else if (!item) {
 				// End of file reached
-				// console.log(textContent.join(" "));
 				// return textContent.join(" ");
 				resolve(textContent.join(" "));
 			} else if (item.text) {
 				// Accumulate the text content
 				textContent.push(item.text);
-				// console.log("added");
 			}
 		});
 	});
-
-	// console.log("Result: \n" + textContent);
 }
 
 function chunkText(text) {
@@ -81,7 +77,7 @@ function chunkText(text) {
 	const chunks = [];
 	let currentChunk = [];
 
-	for (const word of words) {
+	for (let word of words) {
 		currentChunk.push(word);
 		// Check token count approximation (1 word ≈ 1 token)
 		if (currentChunk.join(" ").length > MAX_TOKENS) {
@@ -137,7 +133,7 @@ async function genSaveEmbeds(supabase, openai, filepath) {
 	// now we insert all these chunks one by one into the db
 	for (let i = 0; i < lotsEmbeds.length; i++) {
 		insertData(supabase, path.basename(filepath), lotsText[i], lotsEmbeds[i]);
-		console.log("Chunk added");
+		console.log("Chunk added to DB");
 	}
 }
 
@@ -167,7 +163,7 @@ async function runQuery(query, openai, supabase) {
 			messages: [
 				{ role: "user", content: prompt }, // The user's query or prompt
 			],
-			// max_tokens: 1500,
+			max_tokens: 1500,
 		});
 		const response = gptResp.choices[0].message.content.trim();
 		console.log("ChatGPT: " + response);
