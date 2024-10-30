@@ -1,5 +1,5 @@
 import { genSaveEmbeds } from "./backend/supa.js";
-import { runQuery } from "./langchain.js";
+import { runQuery } from "./backend/langchain.js";
 import path from "path";
 import { createClient } from "@supabase/supabase-js";
 import OpenAI from "openai";
