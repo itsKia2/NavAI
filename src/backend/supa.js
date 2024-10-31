@@ -1,14 +1,8 @@
 import { PdfReader } from "pdfreader";
-import OpenAI from "openai";
 import path from "path";
-import dotenv from "dotenv";
-dotenv.config(); // Load environment variables from .env file
 
 // EXPORTS
-export { selectData, genSaveEmbeds };
-
-// TODO integrate langchain into this instead of what im doing right now
-// TODO find out if we need average embedding vector or should we just have a BUNCH of vectors
+export { selectData, savePdfEmbed };
 
 // This is the size of each chunk
 const MAX_TOKENS = 8192;
@@ -54,6 +48,8 @@ async function getPdfData(pdfFilePath) {
 	});
 }
 
+// TODO replace/delete this later
+// to be replaced with langchain semantic chunking
 function chunkText(text) {
 	const words = text.split(" ");
 	const chunks = [];
@@ -78,7 +74,7 @@ function chunkText(text) {
 
 // Okay this one is kinda confusing but
 // This creates AND inserts into the Supabase database
-async function genSaveEmbeds(supabase, openai, filepath) {
+async function savePdfEmbed(supabase, chat, embedding, filepath) {
 	// Helper function to store the pdf data in variable doc
 	let doc = "";
 	let storeDoc = (input) => {
@@ -96,20 +92,11 @@ async function genSaveEmbeds(supabase, openai, filepath) {
 	const chunks = chunkText(myInput);
 
 	for (let chunk of chunks) {
-		// create embedding FOR EACH CHUNK
-		const embeddingResponse = await openai.embeddings.create({
-			model: "text-embedding-ada-002",
-			input: chunk,
-		});
+		const currEmbed = await embedding.embedDocuments([chunk]);
 		// pushing EACH chunk into the array which will be put into db LATER
-		if (embeddingResponse && embeddingResponse.data) {
-			const [{ embedding }] = embeddingResponse.data;
-			// replaced insertData with lotsEmbeds.push
-			lotsEmbeds.push(embedding);
-			lotsText.push(chunk);
-		} else {
-			throw Error("Something wrong with embedding response");
-		}
+		// replaced insertData with lotsEmbeds.push
+		lotsEmbeds.push(currEmbed[0]);
+		lotsText.push(chunk);
 	}
 
 	// now we insert all these chunks one by one into the db
