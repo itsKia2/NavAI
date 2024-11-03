@@ -7,6 +7,8 @@
     "start": "node src/index.js"
   },
   "dependencies": {
+    "@langchain/core": "^0.3.16",
+    "@langchain/openai": "^0.3.11",
     "@supabase/supabase-js": "^2.45.6",
     "dotenv": "^16.4.5",
     "openai": "^4.68.1",
