@@ -9,21 +9,23 @@ import time
 # --------------------- Configuration ---------------------
 
 # Path to your ChromeDriver executable
-CHROME_DRIVER_PATH = "C:\\Users\\yraza\\Downloads\\chromedriver-win64\\chromedriver-win64\\chromedriver.exe"
+CHROME_DRIVER_PATH = "chromedriver.exe"
 
 # Starting URL
 START_URL = "https://www.iso-ne.com/participate/rules-procedures"
 
 # Keywords to filter relevant URLs
-KEYWORD = "/participate/rules-procedures/"
+KEYWORD = "iso-ne.com"
 
 # Domains to exclude
-EXCLUDE_DOMAINS = ["nerc.com", "npcc.org"]
+EXCLUDE_DOMAINS = ["static-assets", "mailto", "https://www.iso-ne.com/markets-operations/markets/forward-capacity-market/capacity-exchange"]
+
+# Max depth limit
+MAX_DEPTH = 3
 
 # Delay settings (in seconds)
 PAGE_LOAD_DELAY = 3
 LINK_EXTRACTION_DELAY = 1
-
 
 # --------------------- Setup WebDriver ---------------------
 
@@ -41,33 +43,40 @@ def setup_webdriver():
 # --------------------- PDF Scraper Class ---------------------
 
 class PDFScraper:
-    def __init__(self, driver, start_url, keyword, exclude_domains):
+    def __init__(self, driver, start_url, keyword, exclude_domains, max_depth):
         self.driver = driver
         self.start_url = start_url
-        self.keyword = keyword
         self.exclude_domains = exclude_domains
         self.pdf_links_set = set()
         self.visited_urls = set()
         self.pdf_count = 0
+        self.keyword = keyword
+        self.max_depth = max_depth
 
     def scrape_pdfs(self):
-        queue = [self.start_url]
+        queue = [(self.start_url,0)]
 
         while queue:
-            current_url = queue.pop(0)
+            current_url, depth = queue.pop(0)
+            if depth > self.max_depth:
+                continue
             if current_url in self.visited_urls:
                 continue
             self.visited_urls.add(current_url)
 
             print(f"Scraping Page: {current_url}")
             try:
-                self.driver.get(current_url)
+                test = self.driver.get(current_url)
                 time.sleep(PAGE_LOAD_DELAY)  # Wait for the page to load
 
                 html = self.driver.page_source
                 soup = BeautifulSoup(html, 'html.parser')
+                main_content = soup.find('div', id='maincontentcontainer')
 
-                # Extract PDF links on the current page
+                if not main_content:
+                    continue
+
+                #Extract PDF links on the current page
                 pdf_links = soup.find_all('a', href=lambda x: x and x.lower().endswith('.pdf'))
                 for link in pdf_links:
                     href = link['href']
@@ -79,19 +88,19 @@ class PDFScraper:
 
                 # Extract sub-page links within the specified keyword and excluding certain domains
                 sub_page_links = []
-                for link in soup.find_all('a', href=True):
+                for link in main_content.find_all('a', href=True):
                     href = link['href']
                     full_url = urljoin("https://www.iso-ne.com", href)
                     parsed_url = urlparse(full_url)
 
                     # Filter based on keyword and exclude domains
-                    if (self.keyword in parsed_url.path and
+                    if (self.keyword in parsed_url.netloc and
                         not any(excl in full_url for excl in self.exclude_domains)):
 
                         # Normalize URL by removing fragments and query parameters
                         normalized_url = parsed_url.scheme + "://" + parsed_url.netloc + parsed_url.path
                         if normalized_url not in self.visited_urls and normalized_url not in queue:
-                            sub_page_links.append(normalized_url)
+                            sub_page_links.append((normalized_url, depth +1))
 
                 print(f"Found {len(sub_page_links)} sub-page links on {current_url}")
                 queue.extend(sub_page_links)
@@ -119,7 +128,8 @@ def main():
         driver=driver,
         start_url=START_URL,
         keyword=KEYWORD,
-        exclude_domains=EXCLUDE_DOMAINS
+        exclude_domains=EXCLUDE_DOMAINS,
+        max_depth=MAX_DEPTH
     )
 
     # Start scraping
