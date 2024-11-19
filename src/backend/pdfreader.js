@@ -1,5 +1,5 @@
 import axios from "axios";
-import * as pdfjsLib from "pdfjs-dist";
+import { PdfReader } from "pdfreader";
 import fs from "fs/promises";
 
 export { extractLinks, extractTextFromPdf };
@@ -24,22 +24,27 @@ async function extractTextFromPdf(url) {
 	try {
 		// Fetch the PDF as a binary array
 		const response = await axios.get(url, { responseType: "arraybuffer" });
-		const pdfData = new Uint8Array(response.data);
-
-		// Load the PDF document
-		const pdfDoc = await pdfjsLib.getDocument({ data: pdfData }).promise;
+		const pdfData = Buffer.from(response.data);
 
 		let extractedText = "";
 
-		// Loop through all pages and extract text
-		for (let pageNumber = 1; pageNumber <= pdfDoc.numPages; pageNumber++) {
-			const page = await pdfDoc.getPage(pageNumber);
-			const textContent = await page.getTextContent();
+		// Initialize PdfReader
+		const pdfReader = new PdfReader();
 
-			// Combine all text items into a single string
-			const pageText = textContent.items.map((item) => item.str).join(" ");
-			extractedText += pageText;
-		}
+		// Use a Promise to handle the asynchronous parsing
+		await new Promise((resolve, reject) => {
+			pdfReader.parseBuffer(pdfData, (err, item) => {
+				if (err) {
+					reject(err);
+				} else if (!item) {
+					// End of the PDF
+					resolve();
+				} else if (item.text) {
+					// Append text content
+					extractedText += `${item.text} `;
+				}
+			});
+		});
 
 		return extractedText;
 	} catch (error) {

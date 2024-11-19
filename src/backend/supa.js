@@ -2,6 +2,8 @@ import { PdfReader } from "pdfreader";
 import path from "path";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 
+import { extractTextFromPdf } from "./pdfreader.js";
+
 // EXPORTS
 export { selectData, savePdfEmbed };
 
@@ -63,12 +65,13 @@ async function savePdfEmbed(supabase, embedding, link) {
 	};
 
 	// await getPdfData(filepath).then((x) => storeDoc(x));
-	extractTextFromPdf(link)
+	await extractTextFromPdf(link)
 		.then((text) => {
 			semanticChunkText(text).then((x) => storeDoc(x));
 		})
 		.catch((error) => console.error("Error:", error));
 
+	console.log(doc);
 	const lotsEmbeds = [];
 	const lotsText = [];
 
@@ -82,12 +85,7 @@ async function savePdfEmbed(supabase, embedding, link) {
 	}
 
 	for (let i = 0; i < lotsEmbeds.length; i++) {
-		await insertData(
-			supabase,
-			path.basename(filepath),
-			lotsText[i],
-			lotsEmbeds[i],
-		);
+		await insertData(supabase, link, lotsText[i], lotsEmbeds[i]);
 		console.log("Chunk added to DB : " + i);
 	}
 }

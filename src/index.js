@@ -46,8 +46,9 @@ console.log("Env variables loaded");
 const tableName = "pdfEmbedding";
 
 // Used to load every link from .txt into array
-const links = path.resolve("./pdflinks.txt");
-linksArr = await extractLinks(links);
+// const links = path.resolve("./pdflinks.txt");
+const links = path.resolve("./tester.txt");
+let linksArr = await extractLinks(links);
 
 /* EXECUTION */
 const query =
@@ -59,8 +60,8 @@ const query =
 
 // Go through linksArr and add each link to db
 let counter = 0;
-linksArr.map((link) => {
-	savePdfEmbed(supa, embeddings, link);
+linksArr.map(async (link) => {
+	await savePdfEmbed(supa, embeddings, link);
 	counter = counter + 1;
 	console.log("Saved link - " + counter);
 });

@@ -14,7 +14,6 @@
     "dotenv": "^16.4.5",
     "langchain": "^0.3.6",
     "openai": "^4.68.1",
-    "pdfjs-dist": "^4.8.69",
     "pdfreader": "^3.0.5"
   }
 }
