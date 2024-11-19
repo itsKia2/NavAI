@@ -35,7 +35,7 @@ async function extractTextFromPdf(url) {
 		await new Promise((resolve, reject) => {
 			pdfReader.parseBuffer(pdfData, (err, item) => {
 				if (err) {
-					reject(err);
+					reject("pdf: " + url + " - " + err);
 				} else if (!item) {
 					// End of the PDF
 					resolve();

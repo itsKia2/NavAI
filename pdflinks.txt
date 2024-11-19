@@ -307,7 +307,6 @@ https://www.iso-ne.com/static-assets/documents/2020/02/m11_market_operations_rev
 https://www.iso-ne.com/static-assets/documents/2023/08/fcm_cost_allocation_forecast_ccp_2026-2027.pdf
 https://www.iso-ne.com/static-assets/documents/2022/04/transmission_planning_process_guide.pdf
 https://www.iso-ne.com/static-assets/documents/2023/04/iso_comments_draft_nts.pdf
-https://www.iso-ne.com/static-assets/documents/100017/20241106-forecasted-billing-schedule.pdf
 https://www.iso-ne.com/static-assets/documents/regulatory/ferc/ptoac/2011/comp_filing_er11_2617_001.pdf
 https://www.iso-ne.com/static-assets/documents/2022/12/velco_22_tca_01_k21_determination.pdf
 https://www.iso-ne.com/static-assets/documents/rules_proceds/isone_plan/pp05_1/pp5_1.pdf
@@ -364,7 +363,6 @@ https://www.iso-ne.com/static-assets/documents/2022/05/a13_2050_transmission_stu
 https://www.iso-ne.com/static-assets/documents/100011/clg_meeting_agenda_06_04_2024.pdf
 https://www.iso-ne.com/static-assets/documents/rules_proceds/operating/sysop/rt_mkts/sop_rtmkts_0080_0020.pdf
 https://www.iso-ne.com/static-assets/documents/rules_proceds/operating/gen_var_cap/csc_op_protocol.pdf
-https://www.iso-ne.com/static-assets/documents/regulatory/tariff/attach_a/att_a_1_res.pdf
 https://www.iso-ne.com/static-assets/documents/100012/eversoruce_x178_stakeholder_feedback_memo.pdf
 https://www.iso-ne.com/static-assets/documents/regulatory/ferc/fed/2009/07_1375_icr_order_6_23_09.pdf
 https://www.iso-ne.com/static-assets/documents/2023/04/manual_20_forward_capacity_market_rev27_2023_04_06.pdf
@@ -949,7 +947,6 @@ https://www.iso-ne.com/static-assets/documents/2020/02/crop_48001_perform_bcc_te
 https://www.iso-ne.com/static-assets/documents/100010/pp5_6_appendix_c1.pdf
 https://www.iso-ne.com/static-assets/documents/100010/final_nec_slide_deck_2024_05_04.pdf
 https://www.iso-ne.com/static-assets/documents/2023/08/2023_08_07_pac_2050_comments_responses_jan_april_2023.pdf
-https://www.iso-ne.com/static-assets/documents/100017/20241112-forecasted-billing-schedule.pdf
 https://www.iso-ne.com/static-assets/documents/2020/09/standing_inst_form_ltr_item-3.pdf
 https://www.iso-ne.com/static-assets/documents/100007/er24-362-000.pdf
 https://www.iso-ne.com/static-assets/documents/100014/20240828-billing-job-aid-hourly-services.pdf
