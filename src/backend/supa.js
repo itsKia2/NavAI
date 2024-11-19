@@ -56,8 +56,7 @@ async function semanticChunkText(text) {
 		chunkSize: 1000, // Max size per chunk in tokens
 		chunkOverlap: 100, // Overlap to provide context between chunks
 	});
-	const cleanedText = text.replace(/\s+/g, " ").trim();
-	const retVal = await splitter.splitText(cleanedText); // Await here to handle asynchronous behavior
+	const retVal = await splitter.splitText(text); // Await here to handle asynchronous behavior
 	// console.log(retVal);
 	return retVal;
 }
