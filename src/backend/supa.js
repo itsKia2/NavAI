@@ -49,19 +49,26 @@ async function getPdfData(pdfFilePath) {
 // Semantic chunking with LangChain's RecursiveCharacterTextSplitter
 async function semanticChunkText(text) {
 	const splitter = new RecursiveCharacterTextSplitter({
-		separator: ".",         // Use paragraph breaks as natural boundaries
-		chunkSize: 512,      // Max size per chunk in tokens
-		chunkOverlap: 32,          // Overlap to provide context between chunks
+		separator: ".", // Use paragraph breaks as natural boundaries
+		chunkSize: 512, // Max size per chunk in tokens
+		chunkOverlap: 32, // Overlap to provide context between chunks
 	});
 	return await splitter.splitText(text); // Await here to handle asynchronous behavior
 }
-async function savePdfEmbed(supabase, chat, embedding, filepath) {
+
+async function savePdfEmbed(supabase, embedding, link) {
 	let doc = "";
 	const storeDoc = (input) => {
 		doc = input;
 	};
 
-	await getPdfData(filepath).then((x) => storeDoc(x));
+	// await getPdfData(filepath).then((x) => storeDoc(x));
+	extractTextFromPdf(link)
+		.then((text) => {
+			semanticChunkText(text).then((x) => storeDoc(x));
+		})
+		.catch((error) => console.error("Error:", error));
+
 	const lotsEmbeds = [];
 	const lotsText = [];
 
@@ -75,7 +82,12 @@ async function savePdfEmbed(supabase, chat, embedding, filepath) {
 	}
 
 	for (let i = 0; i < lotsEmbeds.length; i++) {
-		await insertData(supabase, path.basename(filepath), lotsText[i], lotsEmbeds[i]);
-		console.log("Chunk added to DB");
+		await insertData(
+			supabase,
+			path.basename(filepath),
+			lotsText[i],
+			lotsEmbeds[i],
+		);
+		console.log("Chunk added to DB : " + i);
 	}
 }

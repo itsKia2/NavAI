@@ -6,9 +6,9 @@ dotenv.config(); // Load environment variables from .env file
 
 import { savePdfEmbed } from "./backend/supa.js";
 import { runQuery } from "./backend/langchain.js";
+import { extractLinks } from "./backend/pdfreader.js";
 
 /* INITIALIZATION */
-
 function loadingEnv() {
 	// Load environment variables using dotenv
 	const SUPABASE_URL = process.env.SUPABASE_URL;
@@ -42,9 +42,12 @@ function loadingEnv() {
 // Used to load Supabase client and OpenAI API
 const { supa, chat, embeddings } = loadingEnv();
 console.log("Env variables loaded");
-let filepath = path.resolve("./assets/op4_rto_final.pdf");
 // Name of table in Supabase
 const tableName = "pdfEmbedding";
+
+// Used to load every link from .txt into array
+const links = path.resolve("./pdflinks.txt");
+linksArr = await extractLinks(links);
 
 /* EXECUTION */
 const query =
@@ -52,4 +55,12 @@ const query =
 
 // Create query using existing vectors present in Supabase
 // runQuery(query, chat, embeddings, supa);
-// savePdfEmbed(supa, chat, embeddings, filepath);
+// savePdfEmbed(supa, embeddings, filepath);
+
+// Go through linksArr and add each link to db
+let counter = 0;
+linksArr.map((link) => {
+	savePdfEmbed(supa, embeddings, link);
+	counter = counter + 1;
+	console.log("Saved link - " + counter);
+});
