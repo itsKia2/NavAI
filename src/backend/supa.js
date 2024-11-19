@@ -51,32 +51,28 @@ async function getPdfData(pdfFilePath) {
 // Semantic chunking with LangChain's RecursiveCharacterTextSplitter
 async function semanticChunkText(text) {
 	const splitter = new RecursiveCharacterTextSplitter({
-		separator: ".", // Use paragraph breaks as natural boundaries
-		chunkSize: 512, // Max size per chunk in tokens
-		chunkOverlap: 32, // Overlap to provide context between chunks
+		separator:
+			/(?<=\n\n)|(?<=\.\s)|(?<=:\s)|(?<=\?)|(?<=!)|(?<=\n-\s)|(?<=\n\d+\.\s)|(?<=\n\* )|(?<=\n[a-zA-Z]\)\s)|(?<=\nCHAPTER\s)|(?<=\nSECTION\s)|(?<=\n[A-Z ]+:)/,
+		chunkSize: 1000, // Max size per chunk in tokens
+		chunkOverlap: 100, // Overlap to provide context between chunks
 	});
-	return await splitter.splitText(text); // Await here to handle asynchronous behavior
+	const cleanedText = text.replace(/\s+/g, " ").trim();
+	const retVal = await splitter.splitText(cleanedText); // Await here to handle asynchronous behavior
+	// console.log(retVal);
+	return retVal;
 }
 
 async function savePdfEmbed(supabase, embedding, link) {
-	let doc = "";
-	const storeDoc = (input) => {
-		doc = input;
-	};
-
 	// await getPdfData(filepath).then((x) => storeDoc(x));
-	await extractTextFromPdf(link)
-		.then((text) => {
-			semanticChunkText(text).then((x) => storeDoc(x));
-		})
-		.catch((error) => console.error("Error:", error));
+	const rawText = await extractTextFromPdf(link).catch((error) =>
+		console.error("Error:", error),
+	);
 
-	console.log(doc);
 	const lotsEmbeds = [];
 	const lotsText = [];
 
-	const myInput = doc.replace(/\n/g, " ");
-	const chunks = await semanticChunkText(myInput); // Await here as well
+	// const myInput = doc.replace(/\n/g, " ");
+	const chunks = await semanticChunkText(rawText); // Await here as well
 
 	for (let chunk of chunks) {
 		const currEmbed = await embedding.embedDocuments([chunk]);

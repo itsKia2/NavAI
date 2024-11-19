@@ -16,7 +16,7 @@ async function runQuery(query, chat, embeddings, supabase) {
 
 	// Now using info from the closest vector, we can pass it into ChatGPT to get response
 	let vectorData = data[0].content;
-	const prompt = `The prompt is: ${query}. Here is the relevant information, please answer: ${vectorData}`;
+	const prompt = `Here is background information from which the question will be asked: ${vectorData}.\n Please now answer the following question using only this data: ${query}`;
 	// Pass prompt to OpenAI and print out
 	const gptResp = await chat.invoke(prompt);
 	const response = gptResp.content;

@@ -46,17 +46,14 @@ console.log("Env variables loaded");
 const tableName = "pdfEmbedding";
 
 // Used to load every link from .txt into array
-// const links = path.resolve("./pdflinks.txt");
-const links = path.resolve("./tester.txt");
+const links = path.resolve("./pdflinks.txt");
 let linksArr = await extractLinks(links);
 
 /* EXECUTION */
 const query =
-	"What is the Supervisor of Short Term Outage Coordination responsible for during Operating Procedure No. 3 - Transmission Outage Scheduling (OP-3) event";
+	"Who issued the document given by docket nos ER23-1003-002? What is the director's name?";
 
-// Create query using existing vectors present in Supabase
 // runQuery(query, chat, embeddings, supa);
-// savePdfEmbed(supa, embeddings, filepath);
 
 // Go through linksArr and add each link to db
 let counter = 0;
