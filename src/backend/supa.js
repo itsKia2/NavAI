@@ -5,7 +5,7 @@ import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import { extractTextFromPdf } from "./pdfreader.js";
 
 // EXPORTS
-export { selectData, getchunkEmbeds };
+export { selectData, getChunkEmbeds };
 
 // Set maximum chunk size in tokens (characters for LangChain)
 const MAX_TOKENS = 1024;

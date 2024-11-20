@@ -9,6 +9,18 @@ import { runQuery } from "./backend/langchain.js";
 import { extractLinks } from "./backend/pdfreader.js";
 
 /* INITIALIZATION */
+// Used to load Supabase client and OpenAI API
+const { supa, chat, embeddings } = loadingEnv();
+console.log("Env variables loaded");
+const query =
+	"Who issued the document given by docket nos ER23-1003-002? What is the director's name?";
+
+/* EXECUTION */
+// runQuery(query, chat, embeddings, supa);
+insertAllPdfs(supa, embeddings, "./tester.txt");
+
+/* FUNCTIONS */
+// Function to load environment variables
 function loadingEnv() {
 	// Load environment variables using dotenv
 	const SUPABASE_URL = process.env.SUPABASE_URL;
@@ -39,38 +51,38 @@ function loadingEnv() {
 	};
 }
 
-// Used to load Supabase client and OpenAI API
-const { supa, chat, embeddings } = loadingEnv();
-console.log("Env variables loaded");
-// Name of table in Supabase
-const tableName = "pdfEmbedding";
+// Add all pdfs from .txt to database
+async function insertAllPdfs(supa, embeddings, filename) {
+	// Used to load every link from .txt into array
+	// const links = path.resolve("./pdflinks.txt");
+	const links = path.resolve(filename);
+	let linksArr = await extractLinks(links);
+	// Go through linksArr and add each link to db
+	let lotsText = [];
+	let lotsEmbed = [];
+	let lotsLink = [];
+	// let { currLink, currText, currEmbed };
+	let counter = 0;
+	linksArr.map(async (link) => {
+		await getChunkEmbeds(embeddings, link).then((x) => {
+			// console.log(x.lotsText);
+			x.lotsText.map((x) => lotsText.push(x));
+			x.lotsEmbeds.map((x) => lotsEmbed.push(x));
+			x.lotsLinks.map((x) => lotsLink.push(x));
+		});
 
-// Used to load every link from .txt into array
-// const links = path.resolve("./pdflinks.txt");
-const links = path.resolve("./tester.txt");
-let linksArr = await extractLinks(links);
+		// Error handling
+		if (lotsText.length != lotsEmbed.length) {
+			throw error("text and embeds dont match");
+		}
+		if (lotsLink.length != lotsEmbed.length) {
+			throw error("links and embeds dont match");
+		}
 
-/* EXECUTION */
-const query =
-	"Who issued the document given by docket nos ER23-1003-002? What is the director's name?";
-
-// runQuery(query, chat, embeddings, supa);
-
-// Go through linksArr and add each link to db
-let lotsText = [];
-let lotsEmbed = [];
-let lotsLink = [];
-// let { currLink, currText, currEmbed };
-let counter = 0;
-linksArr.map(async (link) => {
-	await getChunkEmbeds(embeddings, link).then((x) => {
-		// console.log(x.lotsText);
-		x.lotsText.map((x) => lotsText.push(x));
-		x.lotsEmbeds.map((x) => lotsEmbed.push(x));
-		x.lotsLinks.map((x) => lotsLink.push(x));
+		// Increment counter for debugging purposes
+		counter = counter + 1;
+		console.log("Saved link - " + counter);
 	});
-
-	// Error handling
 	if (lotsText.length != lotsEmbed.length) {
 		throw error("text and embeds dont match");
 	}
@@ -78,18 +90,8 @@ linksArr.map(async (link) => {
 		throw error("links and embeds dont match");
 	}
 
-	// Increment counter for debugging purposes
-	counter = counter + 1;
-	console.log("Saved link - " + counter);
-});
-if (lotsText.length != lotsEmbed.length) {
-	throw error("text and embeds dont match");
-}
-if (lotsLink.length != lotsEmbed.length) {
-	throw error("links and embeds dont match");
-}
-
-for (let i = 0; i < lotsEmbed.length; i++) {
-	await insertData(supa, lotsLink[i], lotsText[i], lotsEmbed[i]);
-	console.log("Chunk added to DB : " + lotsLink[i]);
+	for (let i = 0; i < lotsEmbed.length; i++) {
+		await insertData(supa, lotsLink[i], lotsText[i], lotsEmbed[i]);
+		console.log("Chunk added to DB : " + lotsLink[i]);
+	}
 }
