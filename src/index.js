@@ -1,6 +1,3 @@
-import dotenv from "dotenv";
-dotenv.config(); // Load environment variables from .env file
-
 import { loadingEnv, insertAllPdfs } from "./helper.js";
 
 /* INITIALIZATION */
