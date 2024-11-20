@@ -17,7 +17,7 @@ const query =
 
 /* EXECUTION */
 // runQuery(query, chat, embeddings, supa);
-insertAllPdfs(supa, embeddings, "./tester.txt");
+await insertAllPdfs(supa, embeddings, "./tester.txt");
 
 /* FUNCTIONS */
 // Function to load environment variables
