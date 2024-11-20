@@ -9,4 +9,4 @@ const query =
 
 /* EXECUTION */
 // runQuery(query, chat, embeddings, supa);
-insertAllPdfs(supa, embeddings, "./tester.txt");
+insertAllPdfs(supa, embeddings, "./pdflinks.txt");
