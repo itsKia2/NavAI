@@ -4,7 +4,7 @@ import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
 import dotenv from "dotenv";
 dotenv.config(); // Load environment variables from .env file
 
-import { savePdfEmbed } from "./backend/supa.js";
+import { getChunkEmbeds } from "./backend/supa.js";
 import { runQuery } from "./backend/langchain.js";
 import { extractLinks } from "./backend/pdfreader.js";
 
@@ -46,7 +46,8 @@ console.log("Env variables loaded");
 const tableName = "pdfEmbedding";
 
 // Used to load every link from .txt into array
-const links = path.resolve("./pdflinks.txt");
+// const links = path.resolve("./pdflinks.txt");
+const links = path.resolve("./tester.txt");
 let linksArr = await extractLinks(links);
 
 /* EXECUTION */
@@ -56,9 +57,39 @@ const query =
 // runQuery(query, chat, embeddings, supa);
 
 // Go through linksArr and add each link to db
+let lotsText = [];
+let lotsEmbed = [];
+let lotsLink = [];
+// let { currLink, currText, currEmbed };
 let counter = 0;
 linksArr.map(async (link) => {
-	await savePdfEmbed(supa, embeddings, link);
+	await getChunkEmbeds(embeddings, link).then((x) => {
+		// console.log(x.lotsText);
+		x.lotsText.map((x) => lotsText.push(x));
+		x.lotsEmbeds.map((x) => lotsEmbed.push(x));
+		x.lotsLinks.map((x) => lotsLink.push(x));
+	});
+
+	// Error handling
+	if (lotsText.length != lotsEmbed.length) {
+		throw error("text and embeds dont match");
+	}
+	if (lotsLink.length != lotsEmbed.length) {
+		throw error("links and embeds dont match");
+	}
+
+	// Increment counter for debugging purposes
 	counter = counter + 1;
 	console.log("Saved link - " + counter);
 });
+if (lotsText.length != lotsEmbed.length) {
+	throw error("text and embeds dont match");
+}
+if (lotsLink.length != lotsEmbed.length) {
+	throw error("links and embeds dont match");
+}
+
+for (let i = 0; i < lotsEmbed.length; i++) {
+	await insertData(supa, lotsLink[i], lotsText[i], lotsEmbed[i]);
+	console.log("Chunk added to DB : " + lotsLink[i]);
+}

@@ -49,6 +49,5 @@ async function extractTextFromPdf(url) {
 		return extractedText;
 	} catch (error) {
 		console.error("Error extracting text from PDF:", error);
-		throw error;
 	}
 }

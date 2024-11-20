@@ -5,7 +5,7 @@ import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import { extractTextFromPdf } from "./pdfreader.js";
 
 // EXPORTS
-export { selectData, savePdfEmbed };
+export { selectData, getchunkEmbeds };
 
 // Set maximum chunk size in tokens (characters for LangChain)
 const MAX_TOKENS = 1024;
@@ -61,7 +61,7 @@ async function semanticChunkText(text) {
 	return retVal;
 }
 
-async function savePdfEmbed(supabase, embedding, link) {
+async function getChunkEmbeds(embedding, link) {
 	// await getPdfData(filepath).then((x) => storeDoc(x));
 	const rawText = await extractTextFromPdf(link).catch((error) =>
 		console.error("Error:", error),
@@ -69,6 +69,7 @@ async function savePdfEmbed(supabase, embedding, link) {
 
 	const lotsEmbeds = [];
 	const lotsText = [];
+	const lotsLinks = [];
 
 	// const myInput = doc.replace(/\n/g, " ");
 	const chunks = await semanticChunkText(rawText); // Await here as well
@@ -77,10 +78,7 @@ async function savePdfEmbed(supabase, embedding, link) {
 		const currEmbed = await embedding.embedDocuments([chunk]);
 		lotsEmbeds.push(currEmbed[0]);
 		lotsText.push(chunk);
+		lotsLinks.push(link);
 	}
-
-	for (let i = 0; i < lotsEmbeds.length; i++) {
-		await insertData(supabase, link, lotsText[i], lotsEmbeds[i]);
-		console.log("Chunk added to DB : " + i);
-	}
+	return { lotsText, lotsEmbeds, lotsLinks };
 }
