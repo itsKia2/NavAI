@@ -1,5 +1,0 @@
-requests
-pymupdf
-openai
-psycopg2-binary
-python-dotenv
