@@ -69,7 +69,7 @@ async function insertAllPdfs(supa, embeddings, filename) {
 
 		// Increment counter for debugging purposes
 		counter = counter + 1;
-		console.log("Saved link - " + counter);
+		console.log("Saved link - " + counter + " / " + linksArr.length);
 	}
 
 	// Double checking my error handling
@@ -84,6 +84,9 @@ async function insertAllPdfs(supa, embeddings, filename) {
 	console.log("Finished processing PDFs");
 	for (let i = 0; i < lotsEmbed.length; i++) {
 		await insertData(supa, lotsLink[i], lotsText[i], lotsEmbed[i]);
-		console.log("Chunk added to DB : " + lotsLink[i]);
+		console.log(
+			"Chunk added to DB " + i + " / " + lotsEmbed.length + " : " + lotsLink[i],
+		);
 	}
+	console.log("Uploading finished - " + lotsEmbed.length);
 }
