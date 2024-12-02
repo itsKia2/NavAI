@@ -1,6 +1,6 @@
 export { runQuery };
 
-async function runQuery(query, chat, embeddings, supabase) {
+ async function runQuery(query, chat, embeddings, supabase) {
 	// Create vector embedding for the query
 	const queryEmbed = await embeddings.embedQuery(query);
 
