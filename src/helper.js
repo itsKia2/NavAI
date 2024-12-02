@@ -29,8 +29,12 @@ function loadingEnv() {
 		model: "text-embedding-ada-002",
 	});
 
-	// Supabase client
-	const supabase = createClient(SUPABASE_URL, SUPABASE_API_KEY);
+	// Supabase client with custom timeout setting
+	const supabase = createClient(SUPABASE_URL, SUPABASE_API_KEY, {
+		db: {
+			timeout: 60000, // Set timeout to 60 seconds (adjust as needed)
+		},
+	});
 
 	// Create the Supabase client and OpenAI key
 	return {
