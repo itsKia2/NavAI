@@ -21,4 +21,5 @@ export { runQuery };
 	const gptResp = await chat.invoke(prompt);
 	const response = gptResp.content;
 	console.log("ChatGPT: " + response);
+	return response;
 }
