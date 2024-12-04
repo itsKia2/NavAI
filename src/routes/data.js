@@ -1,4 +1,4 @@
-const express = require("express");
+import express from "express";
 const { createClient } = require("@supabase/supabase-js");
 const router = express.Router();
 
