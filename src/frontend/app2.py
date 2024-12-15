@@ -16,7 +16,7 @@ streamlit_style = """
 
     /* Title styling */
     h1 {
-        color: #1E90FF; /* Blue */
+        color: #1E90FF; /* Dodger Blue */
         text-align: center;
         font-family: 'Roboto', sans-serif;
         font-size: 3em;
@@ -50,7 +50,7 @@ streamlit_style = """
         padding: 15px 25px;
         font-size: 16px;
         border-radius: 10px;
-        transition: background-color 0.3s ease;
+        transition: background-color 0.3s ease, color 0.3s ease;
         box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.3); /* Button shadow */
         display: block;
         margin-left: auto;
@@ -58,7 +58,8 @@ streamlit_style = """
     }
 
     .stButton button:hover {
-        background-color: #4169E1; /* Darker blue on hover */
+        background-color: #ffffff; /* White on hover */
+        color: #1E90FF; /* Blue text on hover */
         box-shadow: 4px 4px 15px rgba(0, 0, 0, 0.4); /* Larger shadow on hover */
     }
 
@@ -82,25 +83,6 @@ streamlit_style = """
         margin: 20px 0;
     }
 
-    /* Processing animation */
-    .processing {
-        color: #1E90FF;
-        font-size: 1.5em;
-        text-align: center;
-        margin-top: 20px;
-        font-family: 'Roboto', sans-serif;
-        animation: blink 1s linear infinite;
-    }
-
-    @keyframes blink {
-        0%, 100% {
-            opacity: 1;
-        }
-        50% {
-            opacity: 0.5;
-        }
-    }
-
     </style>
 """
 st.markdown(streamlit_style, unsafe_allow_html=True)
@@ -111,11 +93,7 @@ st.title("Welcome to NavAI")
 # Subheader with instructions
 st.subheader("Ask NavAI your question below!")
 
-# Add space for cleaner layout
-st.markdown("<br><br>", unsafe_allow_html=True)
-
 # Input box for the user to ask questions
-st.markdown("<h3>What's on your mind?</h3>", unsafe_allow_html=True)
 question = st.text_input("Type your question here:")
 
 # Centered button and response box
@@ -124,24 +102,23 @@ col1, col2, col3 = st.columns([1, 2, 1])
 with col2:
     if st.button("Ask NavAI"):
         if question:
-            with st.spinner('Processing your query, please wait...'):
-                st.markdown("<div class='processing'>Processing...</div>", unsafe_allow_html=True)
-                res = requests.post("https://nav-ai-443601.ue.r.appspot.com/chat", json={'input': question})
-                if res.status_code == 200:
-                    response_json = res.json()
-                    if "reply" in response_json:
-                        result = response_json["reply"]
-                        st.markdown(f"<div class='response-box'>{result}</div>", unsafe_allow_html=True)
-                    else:
-                        st.markdown("<div class='response-box'>No response from the backend.</div>", unsafe_allow_html=True)
+            info_message = st.empty()  # Prepare an empty slot for messages
+            info_message.info("Please wait, we are fetching your answer...")  # Display an info message
+            res = requests.post("https://nav-ai-443601.ue.r.appspot.com/chat", json={'input': question})
+            info_message.empty()  # Clear the message
+            if res.status_code == 200:
+                response_json = res.json()
+                if "reply" in response_json:
+                    result = response_json["reply"]
+                    st.markdown(f"<div class='response-box'>{result}</div>", unsafe_allow_html=True)
                 else:
-                    st.markdown(f"<div class='response-box'>Error with backend request: {res.text}</div>", unsafe_allow_html=True)
+                    st.error("No response from the backend.")
+            else:
+                st.error(f"Error with backend request: {res.text}")
         else:
-            st.markdown("<br>", unsafe_allow_html=True)
-            st.markdown("<div class='response-box'>Please enter a question to get a response!</div>", unsafe_allow_html=True)
+            st.warning("Please enter a question to get a response!")
 
 # Footer
-st.markdown("<br><br>", unsafe_allow_html=True)
 st.markdown(
     """
     <div class="footer">
